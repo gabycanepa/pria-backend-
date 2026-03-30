@@ -1,0 +1,40 @@
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+    directUrl = env("DIRECT_URL")
+}
+
+model user {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  levelProgress levelprogress[]
+
+  @@map("users")
+}
+
+model levelprogress {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  level     Int
+  bestScore Int      @default(0) @map("best_score")
+  completed Boolean  @default(false)
+  character String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, level])
+  @@index([level, completed, bestScore(sort: Desc)])
+  @@map("level_progress")
+}
